@@ -3,10 +3,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score, classification_report
+import shap
 from src.preprocess import load_and_preprocess_data
 
 def train_models(X_train, X_test, y_train, y_test):
-    """Train and evaluate multiple models."""
     models = {
         "Logistic Regression": LogisticRegression(max_iter=1000),
         "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
@@ -23,6 +23,16 @@ def train_models(X_train, X_test, y_train, y_test):
         print(classification_report(y_test, y_pred))
     return results
 
+def explain_model(model, X_test, model_name, feature_names):
+    """Generate SHAP explanations."""
+    explainer = shap.TreeExplainer(model) if "XGBoost" in model_name else shap.KernelExplainer(model.predict_proba, X_test[:100])
+    shap_values = explainer.shap_values(X_test[:100])
+    shap.summary_plot(shap_values, X_test[:100], feature_names=feature_names, show=False)
+    plt.savefig(f"{model_name}_shap_summary.png")
+    plt.close()
+
 if __name__ == "__main__":
     X_train, X_test, y_train, y_test, _ = load_and_preprocess_data("/Users/charan/banking-credit-risk-predictor/data/credit_data.csv")
     results = train_models(X_train, X_test, y_train, y_test)
+    feature_names = pd.read_csv("../data/credit_data.csv").drop(columns=["ID", "default payment next month"]).columns
+    explain_model(results["XGBoost"]["model"], X_test, "XGBoost", feature_names)
