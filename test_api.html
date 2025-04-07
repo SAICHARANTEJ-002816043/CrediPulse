@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Test</title>
+</head>
+<body>
+  <button onclick="testApi()">Test API</button>
+  <p id="result"></p>
+
+  <script>
+    async function testApi() {
+      const data = {
+        features: [20000, 2, 2, 2, 24, 2, 2, -1, -1, -2, -2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      };
+      try {
+        const response = await fetch('http://127.0.0.1:5001/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        document.getElementById('result').textContent = `Default Probability: ${result.default_probability}`;
+      } catch (error) {
+        document.getElementById('result').textContent = `Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
